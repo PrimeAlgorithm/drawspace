@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Plus, Search, Settings } from "lucide-react";
+import { Plus, Search, Pencil } from "lucide-react";
 
 import {
   Sidebar,
@@ -17,7 +17,8 @@ export const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="p-4">
+        <div className="p-4 flex items-center gap-2">
+          <Pencil className="h-5 w-5" />
           <h2 className="text-lg font-semibold">DrawSpace</h2>
         </div>
       </SidebarHeader>
