@@ -18,6 +18,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
     depends_on:
       - postgres
     volumes:
