@@ -4,7 +4,7 @@ from datetime import timedelta
 from uuid import UUID
 from src.database import get_db
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from src.models import User
 from src.core import security
 from src.core.config import (
@@ -98,8 +98,42 @@ async def register_user(
 
 
 @router.post("/login/", response_model=AuthResponse)
-async def login_user(user: UserLogin):
-    pass
+async def login_user(user: UserLogin, db: Session = Depends(get_db)) -> AuthResponse:
+    try:
+        result = db.query(User).filter_by(email=user.email).first()
+
+        if not result:
+            raise HTTPException(
+                status_code=400, detail="Email or password is incorrect"
+            )
+
+        if not security.verify_password(user.password, result.password_hash):
+            raise HTTPException(
+                status_code=400, detail="Email or password is incorrect"
+            )
+
+        generated_token = security.create_access_token(
+            result.id, timedelta(days=ACCESS_TOKEN_EXPIRE_TIME_DAYS)
+        )
+
+        return AuthResponse(
+            access_token=generated_token,
+            user=UserOut(
+                id=result.id,
+                email=result.email,
+                first_name=result.first_name,
+                last_name=result.last_name,
+            ),
+        )
+    except HTTPException:
+        raise
+
+    except SQLAlchemyError as e:
+        print(f"Database error during login: {e}")  # Log this properly
+        raise HTTPException(status_code=500, detail="A database error occurred")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An internal server error occurred")
 
 
 @router.get("/me/", response_model=UserOut)
